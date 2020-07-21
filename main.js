@@ -1,54 +1,82 @@
-var scene = new THREE.Scene();
-console.log(window.THREE);
+const scene = new THREE.Scene();
 
-var camera = new THREE.PerspectiveCamera(
-    55,                                   
-    window.innerWidth / window.innerHeight,
-    0.1,                                  
-    1000                                 
-);
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 1000);
 
-camera.position.set(80, 80, 80);
-camera.lookAt(new THREE.Vector3(0, 0, 0));
-
-var renderer = new THREE.WebGLRenderer({ antialias: true });
-
+const renderer = new THREE.WebGL1Renderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setClearColor(0xfff6e6);
-
 document.body.appendChild(renderer.domElement);
 
-renderer.render(scene, camera);
+const geometry = new THREE.SphereGeometry(10, 30, 30);
+const material = new THREE.MeshNormalMaterial({wireframe: true});
+const sphere = new THREE.Mesh(geometry, material);
+scene.add(sphere);
 
-var controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.addEventListener('change', function () { renderer.render(scene, camera); });
+const geometry2 = new THREE.SphereGeometry(12, 30, 30);
+const material2 = new THREE.MeshNormalMaterial({wireframe: true});
+const sphere2 = new THREE.Mesh(geometry2, material2);
+sphere2.position.x = 30;
+scene.add(sphere2);
 
-var geometry = new THREE.OctahedronGeometry(10, 1);
-var material = new THREE.MeshStandardMaterial({
-    color: 0xff0051,
-    shading: THREE.FlatShading, // default is THREE.SmoothShading
-    metalness: 0,
-    roughness: 1
+const geometry3 = new THREE.SphereGeometry(15, 30, 30);
+const material3 = new THREE.MeshNormalMaterial({wireframe: true});
+const sphere3 = new THREE.Mesh(geometry3, material3);
+sphere3.position.x = -30;
+scene.add(sphere3);
+
+camera.position.z = 70;
+
+const interaction = new THREE.Interaction(renderer, scene, camera);
+sphere.cursor = 'pointer';
+sphere2.cursor = 'pointer';
+var clicked = false;
+sphere.on('click', function(ev) {
+    if (!clicked) {
+        material.wireframe = false;
+        clicked = true;
+    } else {
+        material.wireframe = true;
+        clicked = false;
+    }
+})
+
+var listener = new THREE.AudioListener();
+camera.add( listener );
+var sound = new THREE.Audio(listener);
+
+var audioLoader = new THREE.AudioLoader();
+audioLoader.load( './No_manners.mp3', function( buffer ) {
+	sound.setBuffer( buffer );
+	sound.setLoop( true );
+	sound.setVolume( 0.8 );
 });
-var shapeOne = new THREE.Mesh(geometry, material);
-shapeOne.position.y += 10;
-scene.add(shapeOne);
-var ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
-scene.add(ambientLight);
 
-var pointLight = new THREE.PointLight(0xffffff, 1);
-pointLight.position.set(25, 50, 25);
-scene.add(pointLight);
 
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+var clicked2 = false;
+sphere2.on('click', function(ev) {
+    if (!clicked2) {
+        sound.play();
+        clicked2 = true;
+    } else {
+        sound.stop();
+        clicked2 = false;
+    }
+})
 
-pointLight.castShadow = true;
-pointLight.shadow.mapSize.width = 1024;
-pointLight.shadow.mapSize.height = 1024;
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.minDistance = 1;
+controls.maxDistance = 600;
 
-shapeOne.castShadow = true;
-shapeOne.receiveShadow = true;
+const animate = () => {
+    requestAnimationFrame(animate);
+    sphere.rotation.x += 0.015;
+    sphere2.rotation.x += 0.01;
+    sphere3.rotation.x += 0.005;
+    sphere.rotation.z += 0.015;
+    sphere2.rotation.z += 0.01;
+    sphere3.rotation.z += 0.005;
+    controls.update();
+    renderer.render(scene, camera);
+}
 
-var shadowMaterial = new THREE.ShadowMaterial({ color: 0xeeeeee });
-shadowMaterial.opacity = 0.5;
+animate();
+
