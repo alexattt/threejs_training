@@ -1,33 +1,35 @@
-const scene = new THREE.Scene();
+var scene = new THREE.Scene();
 
-const camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 1000);
+var camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 45, 30000);
 
-const renderer = new THREE.WebGL1Renderer();
+var renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-const geometry = new THREE.SphereGeometry(10, 30, 30);
-const material = new THREE.MeshNormalMaterial({wireframe: true});
-const sphere = new THREE.Mesh(geometry, material);
+var geometry = new THREE.SphereGeometry(70, 20, 20);
+var material = new THREE.MeshNormalMaterial({wireframe: true});
+var sphere = new THREE.Mesh(geometry, material);
 scene.add(sphere);
 
-const geometry2 = new THREE.SphereGeometry(12, 30, 30);
-const material2 = new THREE.MeshNormalMaterial({wireframe: true});
-const sphere2 = new THREE.Mesh(geometry2, material2);
-sphere2.position.x = 30;
+var geometry2 = new THREE.SphereGeometry(80, 20, 20);
+var material2 = new THREE.MeshNormalMaterial({wireframe: true});
+var sphere2 = new THREE.Mesh(geometry2, material2);
+sphere2.position.x = 300;
 scene.add(sphere2);
 
-const geometry3 = new THREE.SphereGeometry(15, 30, 30);
-const material3 = new THREE.MeshNormalMaterial({wireframe: true});
-const sphere3 = new THREE.Mesh(geometry3, material3);
-sphere3.position.x = -30;
+var geometry3 = new THREE.SphereGeometry(90, 20, 20);
+var material3 = new THREE.MeshNormalMaterial({wireframe: true});
+var sphere3 = new THREE.Mesh(geometry3, material3);
+sphere3.position.x = -300;
 scene.add(sphere3);
 
-camera.position.z = 70;
+camera.position.set(-900,-200,-900);
 
-const interaction = new THREE.Interaction(renderer, scene, camera);
+var interaction = new THREE.Interaction(renderer, scene, camera);
 sphere.cursor = 'pointer';
 sphere2.cursor = 'pointer';
+sphere3.cursor = 'pointer';
 var clicked = false;
 sphere.on('click', function(ev) {
     if (!clicked) {
@@ -50,7 +52,6 @@ audioLoader.load( './No_manners.mp3', function( buffer ) {
 	sound.setVolume( 0.8 );
 });
 
-
 var clicked2 = false;
 sphere2.on('click', function(ev) {
     if (!clicked2) {
@@ -62,11 +63,53 @@ sphere2.on('click', function(ev) {
     }
 })
 
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.minDistance = 1;
-controls.maxDistance = 600;
+sphere3.on('mouseover', function(ev) {
+    sphere3.scale.set(1.5,1.5,1.5);
+})
 
-const animate = () => {
+sphere3.on('mouseout', function(ev) {
+    sphere3.scale.set(1,1,1);
+})
+
+
+// ____________________SKYBOX STUFF___________________________________
+
+var controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.minDistance = 500;
+controls.maxDistance = 1500;
+
+var materialArray = [];
+var texture_ft = new THREE.TextureLoader().load( './kenon_star_ft.jpg');
+var texture_bk = new THREE.TextureLoader().load( './kenon_star_bk.jpg');
+var texture_up = new THREE.TextureLoader().load( './kenon_star_up.jpg');
+var texture_dn = new THREE.TextureLoader().load( './kenon_star_dn.jpg');
+var texture_rt = new THREE.TextureLoader().load( './kenon_star_rt.jpg');
+var texture_lf = new THREE.TextureLoader().load( './kenon_star_lf.jpg');
+  
+materialArray.push(new THREE.MeshBasicMaterial( { map: texture_ft }));
+materialArray.push(new THREE.MeshBasicMaterial( { map: texture_bk }));
+materialArray.push(new THREE.MeshBasicMaterial( { map: texture_up }));
+materialArray.push(new THREE.MeshBasicMaterial( { map: texture_dn }));
+materialArray.push(new THREE.MeshBasicMaterial( { map: texture_rt }));
+materialArray.push(new THREE.MeshBasicMaterial( { map: texture_lf }));
+   
+for (var i = 0; i < 6; i++) {
+  materialArray[i].side = THREE.BackSide;
+}
+
+var skyboxGeo = new THREE.BoxGeometry( 10000, 10000, 10000);
+var skybox = new THREE.Mesh( skyboxGeo, materialArray );
+scene.add(skybox);
+
+var ambientLight = new THREE.AmbientLight( 0xcccccc, 0.2 );
+scene.add( ambientLight );
+
+var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.6 );
+directionalLight.position.set( 0.75, 0.75, 1.0 ).normalize();
+scene.add( directionalLight );
+
+
+var animate = () => {
     requestAnimationFrame(animate);
     sphere.rotation.x += 0.015;
     sphere2.rotation.x += 0.01;
@@ -79,4 +122,16 @@ const animate = () => {
 }
 
 animate();
+
+
+// IF WINDOW IS RESIZED, EVERYTHING IS CENTERED EITHER WAY
+window.addEventListener( 'resize', onWindowResize, false );
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    controls.handleResize();
+
+}
+onWindowResize();
 
